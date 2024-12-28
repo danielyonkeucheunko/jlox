@@ -23,17 +23,17 @@ public class Parser {
     }
 
     private Expr expression() {
-        return conditional();
+        return ternary();
     }
 
-    private Expr conditional() {
+    private Expr ternary() {
         Expr expr = equality();
 
         if (match(QUESTION)) {
             Expr thenBranch = expression();
-            consume(COLON, "Expect ':' after then branch of conditional expression.");
-            Expr elseBranch = conditional();
-            expr = new Expr.Conditional(expr, thenBranch, elseBranch);
+            consume(COLON, "Expect ':' after then branch of ternary expression.");
+            Expr elseBranch = ternary();
+            expr = new Expr.Ternary(expr, thenBranch, elseBranch);
         }
 
         return expr;
