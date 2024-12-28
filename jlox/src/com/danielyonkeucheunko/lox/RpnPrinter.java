@@ -27,7 +27,7 @@ public class RpnPrinter implements Expr.Visitor<String> {
     }
 
     @Override
-    public String visitConditionalExpr(Expr.Conditional expr) {
+    public String visitTernaryExpr(Expr.Ternary expr) {
         return "( if " + expr.expression.accept(this) + " " + expr.thenBranch.accept(this) + " " + expr.elseBranch.accept(this) + "}";
     }
 
@@ -47,7 +47,7 @@ public class RpnPrinter implements Expr.Visitor<String> {
 
         System.out.println(new RpnPrinter().print(expression));
 
-        Expr expr = new Expr.Conditional(
+        Expr expr = new Expr.Ternary(
                 new Expr.Literal(true),
                 new Expr.Binary(
                         new Expr.Literal(1),
