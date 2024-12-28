@@ -26,6 +26,11 @@ public class AstPrinter implements Expr.Visitor<String> {
         return parenthesize(expr.operator.lexeme, expr.right);
     }
 
+    @Override
+    public String visitConditionalExpr(Expr.Conditional expr) {
+        return parenthesize("if", expr.expression, expr.thenBranch, expr.elseBranch);
+    }
+
     private String parenthesize(String name, Expr... exprs) {
         StringBuilder builder = new StringBuilder();
 
@@ -49,5 +54,19 @@ public class AstPrinter implements Expr.Visitor<String> {
                         new Expr.Literal(45.67)));
 
         System.out.println(new AstPrinter().print(expression));
+
+        Expr expr = new Expr.Conditional(
+                new Expr.Literal(true),
+                new Expr.Binary(
+                        new Expr.Literal(1),
+                        new Token(TokenType.PLUS, "+", null, 1),
+                        new Expr.Literal(1)),
+                new Expr.Binary(
+                        new Expr.Literal(2),
+                        new Token(TokenType.STAR, "*", null, 1),
+                        new Expr.Literal(2)));
+
+        System.out.println(new AstPrinter().print(expr));
+
     }
 }

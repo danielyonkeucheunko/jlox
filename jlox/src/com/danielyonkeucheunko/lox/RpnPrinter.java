@@ -26,6 +26,11 @@ public class RpnPrinter implements Expr.Visitor<String> {
         return expr.right.accept(this) + " " + expr.operator.lexeme;
     }
 
+    @Override
+    public String visitConditionalExpr(Expr.Conditional expr) {
+        return "( if " + expr.expression.accept(this) + " " + expr.thenBranch.accept(this) + " " + expr.elseBranch.accept(this) + "}";
+    }
+
     public static void main(String[] args) {
         Expr expression = new Expr.Binary(
                 new Expr.Grouping(
@@ -33,13 +38,26 @@ public class RpnPrinter implements Expr.Visitor<String> {
                                 new Expr.Literal(1),
                                 new Token(TokenType.PLUS, "+", null, 1),
                                 new Expr.Literal(2))),
-        new Token(TokenType.STAR, "*", null, 1),
-        new Expr.Grouping(
-                new Expr.Binary(
-                        new Expr.Literal(4),
-                        new Token(TokenType.MINUS, "-", null, 1),
-                        new Expr.Literal(3))));
+                new Token(TokenType.STAR, "*", null, 1),
+                new Expr.Grouping(
+                        new Expr.Binary(
+                                new Expr.Literal(4),
+                                new Token(TokenType.MINUS, "-", null, 1),
+                                new Expr.Literal(3))));
 
         System.out.println(new RpnPrinter().print(expression));
+
+        Expr expr = new Expr.Conditional(
+                new Expr.Literal(true),
+                new Expr.Binary(
+                        new Expr.Literal(1),
+                        new Token(TokenType.PLUS, "+", null, 1),
+                        new Expr.Literal(1)),
+                new Expr.Binary(
+                        new Expr.Literal(2),
+                        new Token(TokenType.STAR, "*", null, 1),
+                        new Expr.Literal(2)));
+
+        System.out.println(new RpnPrinter().print(expr));
     }
 }
