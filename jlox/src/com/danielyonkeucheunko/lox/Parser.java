@@ -1,6 +1,7 @@
 package com.danielyonkeucheunko.lox;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.danielyonkeucheunko.lox.TokenType.*;
@@ -8,8 +9,10 @@ import static com.danielyonkeucheunko.lox.TokenType.*;
 public class Parser {
     private static class ParseError extends RuntimeException {}
 
+
     private final List<Token> tokens;
     private int current = 0;
+    private int loopDepth = 0;
 
     Parser(List<Token> tokens) {
         this.tokens = tokens;
@@ -47,11 +50,91 @@ public class Parser {
         return new Stmt.Var(name, initializer);
     }
 
+    private Stmt whileStatement() {
+        consume(LEFT_PAREN, "Expect '(' after 'while'.");
+        Expr condition = expression();
+        consume(RIGHT_PAREN, "Expect ')' after condition.");
+
+        try {
+            loopDepth++;
+            Stmt body = statement();
+
+            return new Stmt.While(condition, body);
+        } finally {
+            loopDepth--;
+        }
+    }
+
     private Stmt statement() {
+        if (match(FOR)) return forStatement();
+        if (match(IF)) return ifStatement();
         if (match(PRINT)) return printStatement();
+        if (match(WHILE)) return whileStatement();
         if (match(LEFT_BRACE)) return new Stmt.Block(block());
+        if (match(BREAK)) return breakStatement();
 
         return expressionStatement();
+    }
+    private Stmt forStatement() {
+        consume(LEFT_PAREN, "Expect '(' after 'for'.");
+
+        Stmt initializer;
+        if (match(SEMICOLON)) {
+            initializer = null;
+        } else if (match(VAR)) {
+            initializer = varDeclaration();
+        } else {
+            initializer = expressionStatement();
+        }
+
+        Expr condition = null;
+        if (!check(SEMICOLON)) {
+            condition = expression();
+        }
+        consume(SEMICOLON, "Expect ';' after loop condition.");
+
+        Expr increment = null;
+        if (!check(RIGHT_PAREN)) {
+            increment = expression();
+        }
+        consume(RIGHT_PAREN, "Expect ')' after for clauses.");
+
+        try {
+            loopDepth++;
+            Stmt body = statement();
+
+            if (increment != null) {
+                body = new Stmt.Block(
+                        Arrays.asList(
+                                body,
+                                new Stmt.Expression(increment)));
+            }
+
+            if (condition == null) condition = new Expr.Literal(true);
+            body = new Stmt.While(condition, body);
+
+            if (initializer != null) {
+                body = new Stmt.Block(Arrays.asList(initializer, body));
+            }
+
+            return body;
+        }finally {
+            loopDepth--;
+        }
+    }
+
+    private Stmt ifStatement() {
+        consume(LEFT_PAREN, "Expect '(' after 'if'.");
+        Expr condition = expression();
+        consume(RIGHT_PAREN, "Expect ')' after if condition.");
+
+        Stmt thenBranch = statement();
+        Stmt elseBranch = null;
+        if (match(ELSE)) {
+            elseBranch = statement();
+        }
+
+        return new Stmt.If(condition, thenBranch, elseBranch);
     }
 
     private Stmt printStatement() {
@@ -77,6 +160,14 @@ public class Parser {
         return statements;
     }
 
+    private Stmt breakStatement() {
+        if (loopDepth == 0) {
+            error(previous(), "Must be inside a loop to use 'break'.");
+        }
+        consume(SEMICOLON, "Expect ';' after 'break'.");
+        return new Stmt.Break();
+    }
+
     private Expr expression() {
         return assignment();
     }
@@ -99,13 +190,36 @@ public class Parser {
     }
 
     private Expr ternary() {
-        Expr expr = equality();
+        Expr expr = or();
 
         if (match(QUESTION)) {
             Expr thenBranch = expression();
             consume(COLON, "Expect ':' after then branch of ternary expression.");
             Expr elseBranch = ternary();
             expr = new Expr.Ternary(expr, thenBranch, elseBranch);
+        }
+
+        return expr;
+    }
+
+    private Expr or() {
+        Expr expr = and();
+
+        while (match(OR)) {
+            Token operator = previous();
+            Expr right = and();
+            expr = new Expr.Logical(expr, operator, right);
+        }
+
+        return expr;
+    }
+    private Expr and() {
+        Expr expr = equality();
+
+        while (match(AND)) {
+            Token operator = previous();
+            Expr right = equality();
+            expr = new Expr.Logical(expr, operator, right);
         }
 
         return expr;
