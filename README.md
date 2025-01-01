@@ -38,12 +38,12 @@ cd lox
 
 Run this command to run the REPL:
    ```bash
-   java -jar jlox.java
+   java -jar jlox.jar
    ```
 
 Run this command to run from a file (using test.lox as a example): 
    ```bash
-   java -jar jlox.java test.lox
+   java -jar jlox.jar test.lox
    ```
 
 ---
