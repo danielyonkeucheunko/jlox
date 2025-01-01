@@ -36,19 +36,14 @@ cd lox
 
 ## Running the Java Interpreter (Tree-Walk)
 
-1. Navigate to the `jlox/` directory:
+Run this command to run the REPL:
    ```bash
-   cd jlox
+   java -jar jlox.java
    ```
 
-2. Compile the Java files:
+Run this command to run from a file (using test.lox as a example): 
    ```bash
-   javac src/com/danielyonkeucheunko/lox/*.java
-   ```
-
-3. Run the interpreter:
-   ```bash
-   java com.danielyonkeucheunko.lox.Lox
+   java -jar jlox.java test.lox
    ```
 
 ---
